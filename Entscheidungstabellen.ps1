@@ -1,7 +1,7 @@
 ﻿Class Regel{
     [string] $name;
     [String[]] $bedingungen;
-    [bool[]] $aktionen;
+    [String[]] $aktionen;
 
     Regel([string] $name){
         $this.name = $name;
@@ -70,14 +70,17 @@ function consolidate([Regel[]] $inputTable, [int] $countActions){
     $output;
 }
 
-#CSV-Export der konsolidierten Entscheidungstabelle (WIP)
-function exportETtoCsv ([Regel[]] $regeln, [String] $path){
+#CSV-Export der konsolidierten Entscheidungstabelle
+function exportETtoCsv ([Regel[]] $regeln, [String] $path, [String[]] $conditionNames, [String[]] $actionNames){
     [IO.Directory]::SetCurrentDirectory($pwd);
     $stream = [System.IO.StreamWriter] $path;
 	
 	#Befüllen der Header-Zeile
     for($i = 0; $i -lt $regeln.Count; $i++){
-        if($i -eq ($regeln.Count - 1)){
+		if($i -eq 0){
+			$stream.Write(",");
+		}
+		if($i -eq ($regeln.Count - 1)){
             $stream.Write($regeln[$i].name);
 			$stream.WriteLine();
         }else{
@@ -88,11 +91,47 @@ function exportETtoCsv ([Regel[]] $regeln, [String] $path){
 	#Befüllen der Bedingungs-Zeilen
 	for($i = 0; $i -lt $regeln[$i].bedingungen.Count; $i++){
 		for($k = 0; $k -lt $regeln.Count; $k++){
+			if($k -eq 0){
+				$stream.Write($conditionNames[$i] + ",");
+			}
 			if($k -eq ($regeln.Count - 1)){
-				$stream.Write($regeln[$k].bedingungen[$i]);
+				if($regeln[$k].bedingungen[$i] -eq $true){
+					$stream.Write("1");
+				}elseif($regeln[$k].bedingungen[$i] -eq $false){
+					$stream.Write("0");
+				}else{
+					$stream.Write("-");
+				}
 				$stream.WriteLine();
 			}else{
-				$stream.Write($regeln[$k].bedingungen[$i] + ",");
+				if($regeln[$k].bedingungen[$i] -eq $true){
+					$stream.Write("1,");
+				}elseif($regeln[$k].bedingungen[$i] -eq $false){
+					$stream.Write("0,");
+				}else{
+					$stream.Write("-,");
+				}
+			}
+		}
+	}
+
+	#Befüllen der Aktionen
+	for($i = 0; $i -lt $regeln[$i].aktionen.Count; $i++){
+		for($k = 0; $k -lt $regeln.Count; $k++){
+			if($k -eq 0){
+				$stream.Write($actionNames[$i] + ",");
+			}
+			if($k -eq ($regeln.Count - 1)){
+				if($regeln[$k].aktionen[$i] -eq $true){
+					$stream.Write("x");
+				}
+				$stream.WriteLine();
+			}else{
+				if($regeln[$k].aktionen[$i] -eq $true){
+					$stream.Write("x,");
+				}elseif($regeln[$k].aktionen[$i] -eq $false){
+					$stream.Write(",");
+				}
 			}
 		}
 	}
@@ -104,32 +143,38 @@ function exportETtoCsv ([Regel[]] $regeln, [String] $path){
 function konsolidiereEntscheidungstabelle ([String] $inputPath){
     $readCsv = Get-Content -Path $inputPath;
     $ruleNames = $readCsv[0].Split(',');
-    $countRules = $ruleNames.Count;
+    $countRules = ($ruleNames.Count - 1);
     switch ($countRules){
         4 {$countConditions = 2};
         8 {$countConditions = 3};
         16 {$countConditions = 4};
-        default {"Es werden nur zwischen 2 und 4 Bedingungen unterstützt.";exit;};
+		32 {$countConditions = 5};
+        default {"Es werden nur zwischen 2 und 5 Bedingungen unterstützt.";exit;};
     }
     $countActions = ($readCsv.Count - 1) - $countConditions;
+	[String[]] $actionNames = @();
+	[String[]] $conditionNames = @();
     [Regel[]] $rules = @();
 
 
 
     #Erzeugen des Regel-Arrays
     foreach ($ruleName in $ruleNames){
-        $tmpRule = [Regel]::new($ruleName);
-        $rules += $tmpRule;
+		if($ruleName -match "R"){
+			$tmpRule = [Regel]::new($ruleName);
+			$rules += $tmpRule;
+		}
     }
 
     #Einlesen der Bedingungen
     for($y = 1; $y -lt ($countConditions + 1); $y++){
         $tmpLine = $readCsv[$y].Split(',');
-        for($x = 0; $x -lt $tmpLine.Count; $x++){
-            if($tmpLine[$x] -eq 1){
-                $rules[$x].bedingungen += $true;
+		$conditionNames += $tmpLine[0];
+        for($x = 1; $x -lt $tmpLine.Count; $x++){
+			if($tmpLine[$x] -eq 1){
+                $rules[($x - 1)].bedingungen += $true;
             } else{
-                $rules[$x].bedingungen += $false;
+                $rules[($x - 1)].bedingungen += $false;
             }
         }
     }
@@ -137,11 +182,12 @@ function konsolidiereEntscheidungstabelle ([String] $inputPath){
     #Einlesen der Aktionen
     for($y = ($countConditions + 1); $y -lt $readCsv.Count; $y++){
         $tmpLine = $readCsv[$y].Split(',');
-        for($x = 0; $x -lt $tmpLine.Count; $x++){
-            if($tmpLine[$x] -eq 1){
-                $rules[$x].aktionen += $true;
+		$actionNames += $tmpLine[0];
+        for($x = 1; $x -lt $tmpLine.Count; $x++){
+            if($tmpLine[$x] -eq 'x'){
+                $rules[($x - 1)].aktionen += $true;
             } else{
-                $rules[$x].aktionen += $false;
+                $rules[($x - 1)].aktionen += $false;
             }
         }
     }
@@ -154,8 +200,5 @@ function konsolidiereEntscheidungstabelle ([String] $inputPath){
     } until($result[0] -eq 0)
 
     #Export to CSV funktioniert noch nicht
-    exportETtoCsv $rules ($inputPath.Replace(".csv", "-cons.csv"));
-
-    #Debug-Ausgabe
-    #$rules;
+    exportETtoCsv $rules ($inputPath.Replace(".csv", "-cons.csv")) $conditionNames $actionNames;
 }

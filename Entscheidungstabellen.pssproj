@@ -33,7 +33,12 @@
     <Compile Include="Test-CSV\Test3.1.csv" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="ET-Vorlagen\" />
     <Folder Include="Test-CSV\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ET-Vorlagen\Entscheidungstabellen-Vorlagen.ods" />
+    <Content Include="ET-Vorlagen\Entscheidungstabellen-Vorlagen.xlsx" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Target Name="Build" />
