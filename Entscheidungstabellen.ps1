@@ -72,49 +72,33 @@ function consolidate([Regel[]] $inputTable, [int] $countActions){
 
 #CSV-Export der konsolidierten Entscheidungstabelle (WIP)
 function exportETtoCsv ([Regel[]] $regeln, [String] $path){
-    <# Old Code
-	$exportTable = @();
-    $tmpLine = @();
-
-    foreach($name in $regeln.name){
-        $tmpLine += $name;
-    }
-    $exportTable += , $tmpLine;
-
-    for($i = 0; $i -lt $regeln[0].bedingungen.Count; $i++){
-        $tmpLine = @();
-        for($k = 0; $k -lt $regeln.Count; $k++){
-            $tmpLine += $regeln[$k].bedingungen[$i];
-        }
-        $exportTable += , $tmpLine;
-    }
-
-    for($i = 0; $i -lt $regeln[0].aktionen.Count; $i++){
-        $tmpLine = @();
-        for($k = 0; $k -lt $regeln.Count; $k++){
-            $tmpLine += $regeln[$k].aktionen[$i];
-        }
-        $exportTable += , $tmpLine;
-    }
-
-    $exportTable
-
-    $exportTable | Export-Csv -NoTypeInformation -Path $path;
-    #>
-
     [IO.Directory]::SetCurrentDirectory($pwd);
     $stream = [System.IO.StreamWriter] $path;
+	
+	#Befüllen der Header-Zeile
     for($i = 0; $i -lt $regeln.Count; $i++){
         if($i -eq ($regeln.Count - 1)){
-            fgg
+            $stream.Write($regeln[$i].name);
+			$stream.WriteLine();
         }else{
             $stream.Write($regeln[$i].name + ",");
         }
     }
+	
+	#Befüllen der Bedingungs-Zeilen
+	for($i = 0; $i -lt $regeln[$i].bedingungen.Count; $i++){
+		for($k = 0; $k -lt $regeln.Count; $k++){
+			if($k -eq ($regeln.Count - 1)){
+				$stream.Write($regeln[$k].bedingungen[$i]);
+				$stream.WriteLine();
+			}else{
+				$stream.Write($regeln[$k].bedingungen[$i] + ",");
+			}
+		}
+	}
 
     $stream.Close();
 }
-
 
 # Startfunktion
 function konsolidiereEntscheidungstabelle ([String] $inputPath){
@@ -175,5 +159,3 @@ function konsolidiereEntscheidungstabelle ([String] $inputPath){
     #Debug-Ausgabe
     #$rules;
 }
-
-
