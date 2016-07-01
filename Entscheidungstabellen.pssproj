@@ -26,9 +26,17 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <ItemGroup />
   <ItemGroup>
-    <Compile Include="Script.ps1" />
+    <Compile Include="Entscheidungstabellen.ps1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Test-CSV\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Test-CSV\Logic4.csv" />
+    <Content Include="Test-CSV\Test-Complete.csv" />
+    <Content Include="Test-CSV\Test3.1-cons.csv" />
+    <Content Include="Test-CSV\Test3.1.csv" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Target Name="Build" />
