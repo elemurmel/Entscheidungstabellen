@@ -199,6 +199,6 @@ function konsolidiereEntscheidungstabelle ([String] $inputPath){
         $rules = $result[1..($rules.Count)];
     } until($result[0] -eq 0)
 
-    #Export to CSV funktioniert noch nicht
+    #Export der konsolidierten Tabelle in CSV
     exportETtoCsv $rules ($inputPath.Replace(".csv", "-cons.csv")) $conditionNames $actionNames;
 }
